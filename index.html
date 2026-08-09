@@ -2634,7 +2634,8 @@ footer {
       </div>
     </div>
     <div class="up">
-      <form id="contactForm" onsubmit="return false;">
+      <form id="contactForm" action="https://formspree.io/f/mzdnndna" method="POST">
+        <input type="hidden" name="_subject" value="Nouvelle demande - Cohesif Sport">
         <div class="fg-2">
           <div class="fg"><label>Prénom</label><input type="text" name="prenom" placeholder="Jean" required></div>
           <div class="fg"><label>Nom</label><input type="text" name="nom" placeholder="Dupont" required></div>
@@ -2652,7 +2653,7 @@ footer {
           </select>
         </div>
         <div class="fg"><label>Message</label><textarea name="message" placeholder="Décrivez votre projet ou votre besoin..." required></textarea></div>
-        <button type="submit" class="btn-submit" onclick="sendContactForm()">Envoyer ma demande →</button>
+        <button type="submit" class="btn-submit">Envoyer ma demande →</button>
       </form>
     </div>
   </div>
@@ -2765,34 +2766,41 @@ window.addEventListener('scroll', ()=>{
     : 'rgba(232,228,220,.07)';
 });
 
-/* ── FORM → MAILTO ── (no dependencies) */
-function sendContactForm(){
-  var f = document.getElementById('contactForm');
-  if(!f) return;
-  /* Validation native HTML */
-  var inputs = f.querySelectorAll('[required]');
-  for(var i=0;i<inputs.length;i++){
-    if(!inputs[i].value.trim()){ inputs[i].reportValidity(); return; }
-  }
-  var prenom   = f.querySelector('[name="prenom"]').value.trim();
-  var nom      = f.querySelector('[name="nom"]').value.trim();
-  var email    = f.querySelector('[name="email"]').value.trim();
-  var tel      = f.querySelector('[name="telephone"]').value.trim();
-  var profil   = f.querySelector('[name="profil"]').value;
-  var message  = f.querySelector('[name="message"]').value.trim();
+/* ── FORM → FORMSPREE ── */
+(function(){
+  var form = document.getElementById('contactForm');
+  if(!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var btn = form.querySelector('button[type="submit"]');
+    var originalText = btn ? btn.textContent : '';
+    if(btn){ btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
 
-  var sujet = encodeURIComponent('Demande Cohesif Sport — ' + prenom + ' ' + nom);
-  var corps = encodeURIComponent(
-    'Prénom : ' + prenom + '\n' +
-    'Nom : '    + nom    + '\n' +
-    'Email : '  + email  + '\n' +
-    (tel ? 'Téléphone : ' + tel + '\n' : '') +
-    'Profil : ' + profil + '\n\n' +
-    'Message :\n' + message
-  );
-
-  window.location.href = 'mailto:contact@cohesifsport.fr?subject=' + sujet + '&body=' + corps;
-}
+    var data = new FormData(form);
+    fetch('https://formspree.io/f/mzdnndna', {
+      method: 'POST',
+      body: data,
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(resp){
+      if(resp.ok){
+        form.reset();
+        if(btn){ btn.textContent = 'Message envoyé ✓'; }
+        var confirm = document.createElement('p');
+        confirm.style.cssText = 'color:var(--gold);margin-top:12px;font-size:14px;';
+        confirm.textContent = 'Votre message a bien été envoyé. Nous vous répondons sous 48h.';
+        form.appendChild(confirm);
+      } else {
+        if(btn){ btn.disabled = false; btn.textContent = originalText; }
+        alert('Une erreur est survenue. Veuillez réessayer ou nous écrire à contact@cohesifsport.fr');
+      }
+    })
+    .catch(function(){
+      if(btn){ btn.disabled = false; btn.textContent = originalText; }
+      alert('Une erreur est survenue. Veuillez réessayer ou nous écrire à contact@cohesifsport.fr');
+    });
+  });
+})();
 
 /* ── GSAP ANIMATIONS ── */
 if(typeof gsap !== 'undefined') {
